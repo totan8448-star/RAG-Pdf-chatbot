@@ -5,6 +5,7 @@ Same RAG pipeline as app.py, but with a browser interface.
 Run with:  streamlit run streamlit_app.py
 """
 
+import os
 import tempfile
 
 import streamlit as st
@@ -16,7 +17,10 @@ from langchain_community.vectorstores import FAISS
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 
+# Load from .env locally; on Streamlit Cloud use st.secrets
 load_dotenv()
+if "GROQ_API_KEY" in st.secrets:
+    os.environ["GROQ_API_KEY"] = st.secrets["GROQ_API_KEY"]
 
 # ---------------- Page config ----------------
 st.set_page_config(page_title="PDF QA Bot", page_icon="📄", layout="centered")
