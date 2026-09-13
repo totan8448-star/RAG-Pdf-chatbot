@@ -39,168 +39,263 @@ st.set_page_config(page_title="PDF QA Bot", page_icon="📄", layout="centered")
 # ---------------- Custom CSS ----------------
 st.markdown("""
 <style>
-    /* Import Google Font */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-    html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
-    }
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif;
+}
 
-    /* Animated gradient background on main header */
-    .hero-banner {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f64f59 100%);
-        background-size: 200% 200%;
-        animation: gradientShift 6s ease infinite;
-        border-radius: 16px;
-        padding: 2.5rem 2rem;
-        text-align: center;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
-    }
+/* Animated hero banner */
+.hero-banner {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed, #db2777);
+    background-size: 200% 200%;
+    animation: gradientShift 6s ease infinite;
+    border-radius: 20px;
+    padding: 2.2rem 1.5rem 1.8rem;
+    text-align: center;
+    margin-bottom: 1.8rem;
+    box-shadow: 0 10px 40px rgba(79, 70, 229, 0.35);
+}
 
-    @keyframes gradientShift {
-        0%   { background-position: 0% 50%; }
-        50%  { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
+@keyframes gradientShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
 
-    .hero-title {
-        font-size: 2.6rem;
-        font-weight: 700;
-        color: white;
-        margin: 0;
-        letter-spacing: -0.5px;
-        text-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    }
+.hero-icon {
+    font-size: 2.8rem;
+    animation: bounce 2.5s ease-in-out infinite;
+    display: inline-block;
+}
 
-    .hero-subtitle {
-        font-size: 1rem;
-        color: rgba(255,255,255,0.85);
-        margin-top: 0.5rem;
-        font-weight: 300;
-    }
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-8px); }
+}
 
-    /* Pulse animation on the icon */
-    .pulse-icon {
-        display: inline-block;
-        animation: pulse 2s ease-in-out infinite;
-        font-size: 3rem;
-    }
+.hero-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: white;
+    margin: 0.3rem 0 0.2rem;
+    letter-spacing: -0.5px;
+}
 
-    @keyframes pulse {
-        0%, 100% { transform: scale(1); }
-        50%       { transform: scale(1.12); }
-    }
+.hero-sub {
+    font-size: 0.95rem;
+    color: rgba(255,255,255,0.8);
+    font-weight: 300;
+    margin: 0;
+}
 
-    /* Answer card */
-    .answer-card {
-        background: linear-gradient(135deg, #f0fff4, #e6fffa);
-        border-left: 4px solid #38a169;
-        border-radius: 12px;
-        padding: 1.2rem 1.5rem;
-        margin-top: 1rem;
-        animation: fadeInUp 0.5s ease;
-        box-shadow: 0 4px 16px rgba(56, 161, 105, 0.15);
-    }
+/* Upload box */
+.upload-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.3rem;
+    display: block;
+}
 
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(16px); }
-        to   { opacity: 1; transform: translateY(0); }
-    }
+/* Success bar */
+.status-bar {
+    background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+    border: 1px solid #6ee7b7;
+    border-radius: 12px;
+    padding: 0.75rem 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1.5rem;
+    animation: fadeSlide 0.4s ease;
+}
 
-    .answer-label {
-        font-weight: 700;
-        color: #276749;
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 0.5rem;
-    }
+.status-bar span {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #065f46;
+}
 
-    .answer-text {
-        color: #1a202c;
-        font-size: 1.05rem;
-        line-height: 1.7;
-    }
+.status-dot {
+    width: 10px; height: 10px;
+    background: #10b981;
+    border-radius: 50%;
+    animation: ping 1.5s ease-in-out infinite;
+    flex-shrink: 0;
+}
 
-    /* Upload area styling */
-    .upload-section {
-        background: #f7fafc;
-        border: 2px dashed #cbd5e0;
-        border-radius: 12px;
-        padding: 1.5rem;
-        text-align: center;
-        transition: border-color 0.3s;
-        margin-bottom: 1rem;
-    }
+@keyframes ping {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.5; transform: scale(1.4); }
+}
 
-    /* Stats chips */
-    .chip {
-        display: inline-block;
-        background: #ebf4ff;
-        color: #2b6cb0;
-        border-radius: 20px;
-        padding: 0.25rem 0.75rem;
-        font-size: 0.8rem;
-        font-weight: 600;
-        margin: 0.2rem;
-    }
+/* Chat area */
+.chat-container {
+    border: 1.5px solid #e5e7eb;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #fafafa;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
 
-    /* Builder badge at bottom */
-    .builder-badge {
-        text-align: center;
-        margin-top: 3rem;
-        padding: 1rem;
-        background: linear-gradient(135deg, #667eea15, #764ba215);
-        border-radius: 12px;
-        border: 1px solid #667eea30;
-        animation: fadeInUp 1s ease;
-    }
+.chat-header {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    padding: 0.85rem 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
 
-    .builder-badge p {
-        margin: 0;
-        font-size: 0.9rem;
-        color: #553c9a;
-        font-weight: 500;
-    }
+.chat-header-title {
+    color: white;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
 
-    .builder-name {
-        font-size: 1.1rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
+.chat-body {
+    padding: 1.2rem;
+    min-height: 80px;
+}
 
-    /* Sidebar styling */
-    .sidebar-card {
-        background: white;
-        border-radius: 10px;
-        padding: 0.8rem;
-        margin-bottom: 0.5rem;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
+/* Message bubbles */
+.msg-user {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.8rem;
+    animation: fadeSlide 0.3s ease;
+}
 
-    /* Hide default streamlit header decorations */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
+.msg-user-bubble {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: white;
+    border-radius: 18px 18px 4px 18px;
+    padding: 0.7rem 1.1rem;
+    max-width: 80%;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    box-shadow: 0 2px 10px rgba(79,70,229,0.3);
+}
+
+.msg-bot {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 0.8rem;
+    animation: fadeSlide 0.3s ease;
+}
+
+.msg-bot-avatar {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, #4f46e5, #db2777);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+    margin-right: 0.5rem;
+    margin-top: 2px;
+}
+
+.msg-bot-bubble {
+    background: white;
+    color: #1f2937;
+    border-radius: 18px 18px 18px 4px;
+    padding: 0.7rem 1.1rem;
+    max-width: 80%;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    border: 1px solid #f3f4f6;
+}
+
+@keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Empty chat state */
+.empty-chat {
+    text-align: center;
+    padding: 1.5rem 1rem;
+    color: #9ca3af;
+}
+
+.empty-chat-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    margin-top: 2.5rem;
+    padding: 1.2rem;
+    background: linear-gradient(135deg, #f5f3ff, #fdf2f8);
+    border-radius: 14px;
+    border: 1px solid #e9d5ff;
+}
+
+.footer-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #4f46e5, #db2777);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.footer-stack {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin-top: 3px;
+}
+
+/* Sidebar */
+.sb-item {
+    background: white;
+    border-radius: 10px;
+    padding: 0.65rem 0.9rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid #f3f4f6;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.sb-label {
+    font-size: 0.7rem;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 600;
+}
+
+.sb-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-top: 1px;
+    word-break: break-word;
+}
+
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------- Hero Banner ----------------
+
+# ---------------- Hero ----------------
 st.markdown("""
 <div class="hero-banner">
-    <div class="pulse-icon">📄</div>
+    <div class="hero-icon">📄</div>
     <h1 class="hero-title">PDF QA Bot</h1>
-    <p class="hero-subtitle">Upload any PDF and ask questions — powered by AI</p>
+    <p class="hero-sub">Upload a PDF · Ask anything · Get instant answers</p>
 </div>
 """, unsafe_allow_html=True)
 
 
-# ---------------- Build RAG pipeline (cached per unique PDF) ----------------
-@st.cache_resource(show_spinner="🔧 Building knowledge index...")
+# ---------------- RAG pipeline ----------------
+@st.cache_resource(show_spinner="⚙️ Processing your PDF...")
 def build_rag_chain(pdf_bytes: bytes, pdf_name: str, api_key: str):
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
         tmp.write(pdf_bytes)
@@ -210,11 +305,8 @@ def build_rag_chain(pdf_bytes: bytes, pdf_name: str, api_key: str):
     splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
     chunks = splitter.split_documents(documents)
 
-    embeddings = HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2"
-    )
+    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
     vectorstore = FAISS.from_documents(chunks, embeddings)
-
     llm = ChatGroq(model="openai/gpt-oss-20b", temperature=0, api_key=api_key)
 
     prompt_template = ChatPromptTemplate.from_template("""
@@ -232,134 +324,162 @@ ANSWER:
     return vectorstore, llm, prompt_template, len(chunks), len(documents)
 
 
-# ---------------- File uploader ----------------
+# ---------------- Upload ----------------
 uploaded_file = st.file_uploader(
-    "📁 Drop your PDF here",
+    "📁 Upload your PDF",
     type="pdf",
-    help="Any PDF works — resume, article, research paper, contract, etc.",
+    help="Any text-based PDF — resume, article, research paper, contract, etc.",
 )
 
 if uploaded_file is None:
     st.markdown("""
-    <div style="text-align:center; padding: 2rem; color: #718096;">
-        <div style="font-size: 3rem;">⬆️</div>
-        <p style="font-size: 1.1rem; font-weight: 500;">Upload a PDF above to get started</p>
-        <p style="font-size: 0.85rem;">Supports any text-based PDF document</p>
+    <div style="text-align:center; padding:2rem 1rem; color:#9ca3af;">
+        <div style="font-size:3rem; margin-bottom:0.5rem;">⬆️</div>
+        <div style="font-size:1rem; font-weight:500; color:#6b7280;">Upload a PDF to start chatting</div>
+        <div style="font-size:0.82rem; margin-top:0.3rem;">Supports any text-based PDF document</div>
     </div>
     """, unsafe_allow_html=True)
-
-    # Builder badge shown on empty state
     st.markdown("""
-    <div class="builder-badge">
-        <p>✨ Built with passion by</p>
-        <p class="builder-name">Totan</p>
-        <p style="font-size:0.75rem; color:#888; margin-top:4px;">LangChain · Groq · FAISS · Streamlit</p>
+    <div class="footer">
+        <div style="font-size:0.8rem; color:#6b7280;">✨ Built by</div>
+        <div class="footer-name">Totan</div>
+        <div class="footer-stack">LangChain · Groq · FAISS · HuggingFace · Streamlit</div>
     </div>
     """, unsafe_allow_html=True)
     st.stop()
 
-# Build the pipeline
+# Build pipeline
 vectorstore, llm, prompt_template, chunk_count, page_count = build_rag_chain(
-    uploaded_file.getvalue(),
-    uploaded_file.name,
-    GROQ_API_KEY,
+    uploaded_file.getvalue(), uploaded_file.name, GROQ_API_KEY,
 )
 
-# Success message with animation
+# Ready status bar
 st.markdown(f"""
-<div style="background: linear-gradient(135deg, #ebf8ff, #bee3f8);
-            border-left: 4px solid #3182ce;
-            border-radius: 10px;
-            padding: 0.8rem 1.2rem;
-            margin-bottom: 1rem;
-            animation: fadeInUp 0.4s ease;">
-    <strong>✅ Ready!</strong> &nbsp;
-    <span class="chip">📄 {page_count} pages</span>
-    <span class="chip">✂️ {chunk_count} chunks</span>
-    <span class="chip">🔢 384-dim embeddings</span>
+<div class="status-bar">
+    <div class="status-dot"></div>
+    <span>✅ "{uploaded_file.name}" ready &nbsp;·&nbsp; {page_count} pages &nbsp;·&nbsp; {uploaded_file.size / 1024:.1f} KB</span>
 </div>
 """, unsafe_allow_html=True)
 
 
-# ---------------- Sidebar ----------------
+# ---------------- Sidebar (pipeline info only) ----------------
 with st.sidebar:
-    st.markdown("## ⚙️ Pipeline Info")
+    st.markdown("### ⚙️ About this App")
     st.markdown(f"""
-    <div class="sidebar-card">
-        <div style="font-size:0.75rem; color:#718096; text-transform:uppercase; letter-spacing:1px;">Document</div>
-        <div style="font-weight:600; color:#2d3748; margin-top:2px; word-break:break-all;">{uploaded_file.name}</div>
+    <div class="sb-item">
+        <div class="sb-label">Document</div>
+        <div class="sb-value">{uploaded_file.name}</div>
     </div>
-    <div class="sidebar-card">
-        <div style="font-size:0.75rem; color:#718096; text-transform:uppercase; letter-spacing:1px;">Size</div>
-        <div style="font-weight:600; color:#2d3748; margin-top:2px;">{uploaded_file.size / 1024:.1f} KB</div>
+    <div class="sb-item">
+        <div class="sb-label">Pages</div>
+        <div class="sb-value">{page_count}</div>
     </div>
-    <div class="sidebar-card">
-        <div style="font-size:0.75rem; color:#718096; text-transform:uppercase; letter-spacing:1px;">Pages · Chunks</div>
-        <div style="font-weight:600; color:#2d3748; margin-top:2px;">{page_count} pages · {chunk_count} chunks</div>
+    <div class="sb-item">
+        <div class="sb-label">File Size</div>
+        <div class="sb-value">{uploaded_file.size / 1024:.1f} KB</div>
     </div>
-    <div class="sidebar-card">
-        <div style="font-size:0.75rem; color:#718096; text-transform:uppercase; letter-spacing:1px;">Embeddings</div>
-        <div style="font-weight:600; color:#2d3748; margin-top:2px;">all-MiniLM-L6-v2</div>
+    <div class="sb-item">
+        <div class="sb-label">AI Model</div>
+        <div class="sb-value">GPT-OSS 20B via Groq</div>
     </div>
-    <div class="sidebar-card">
-        <div style="font-size:0.75rem; color:#718096; text-transform:uppercase; letter-spacing:1px;">Vector Store</div>
-        <div style="font-weight:600; color:#2d3748; margin-top:2px;">FAISS</div>
+    <div class="sb-item">
+        <div class="sb-label">Search Engine</div>
+        <div class="sb-value">FAISS Vector Store</div>
     </div>
-    <div class="sidebar-card">
-        <div style="font-size:0.75rem; color:#718096; text-transform:uppercase; letter-spacing:1px;">LLM</div>
-        <div style="font-weight:600; color:#2d3748; margin-top:2px;">GPT-OSS 20B (Groq)</div>
-    </div>
+    """, unsafe_allow_html=True)
 
-    <hr style="border:none; border-top:1px solid #e2e8f0; margin: 1.2rem 0;">
-
-    <div style="text-align:center; padding: 0.5rem;">
-        <div style="font-size:0.75rem; color:#718096;">Built by</div>
-        <div style="font-size:1.1rem; font-weight:700;
-                    background: linear-gradient(135deg, #667eea, #764ba2);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    background-clip: text;">Totan</div>
+    st.markdown("""
+    <hr style="border:none; border-top:1px solid #f3f4f6; margin:1rem 0;">
+    <div style="text-align:center; padding:0.3rem;">
+        <div style="font-size:0.72rem; color:#9ca3af;">Built by</div>
+        <div class="footer-name" style="font-size:1.1rem;">Totan</div>
     </div>
     """, unsafe_allow_html=True)
 
 
-# ---------------- Q&A UI ----------------
-question = st.text_input(
-    "❓ Ask a question about your PDF:",
-    placeholder="e.g. What is this document about?",
-)
+# ---------------- Chat UI ----------------
 
-if question:
-    try:
-        with st.spinner("🤔 Thinking..."):
-            retrieved_docs = vectorstore.similarity_search(question, k=3)
+# Init chat history
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+
+# Chat container
+st.markdown("""
+<div class="chat-container">
+    <div class="chat-header">
+        <span style="font-size:1.1rem;">🤖</span>
+        <span class="chat-header-title">Chat with your PDF</span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# Display message history
+if st.session_state.chat_history:
+    for msg in st.session_state.chat_history:
+        if msg["role"] == "user":
+            st.markdown(f"""
+            <div class="msg-user">
+                <div class="msg-user-bubble">{msg["content"]}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown(f"""
+            <div class="msg-bot">
+                <div class="msg-bot-avatar">🤖</div>
+                <div class="msg-bot-bubble">{msg["content"]}</div>
+            </div>
+            """, unsafe_allow_html=True)
+else:
+    st.markdown("""
+    <div class="empty-chat">
+        <div class="empty-chat-icon">💬</div>
+        <div style="font-size:0.9rem; font-weight:500;">Ask anything about your PDF</div>
+        <div style="font-size:0.8rem; margin-top:0.2rem;">e.g. "What is this document about?"</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Input + Send button
+col1, col2 = st.columns([5, 1])
+with col1:
+    question = st.text_input(
+        "question",
+        placeholder="Type your question here...",
+        label_visibility="collapsed",
+        key="question_input",
+    )
+with col2:
+    send = st.button("Send ➤", use_container_width=True, type="primary")
+
+# Handle send
+if (send or question) and question.strip():
+    # Add user message
+    st.session_state.chat_history.append({"role": "user", "content": question.strip()})
+
+    with st.spinner("🤔 Thinking..."):
+        try:
+            retrieved_docs = vectorstore.similarity_search(question.strip(), k=3)
             context = "\n\n".join(doc.page_content for doc in retrieved_docs)
-            filled_prompt = prompt_template.format(context=context, question=question)
+            filled_prompt = prompt_template.format(context=context, question=question.strip())
             response = llm.invoke(filled_prompt)
+            answer = response.content
+        except Exception as e:
+            answer = f"Sorry, I encountered an error: {e}"
 
-        st.markdown(f"""
-        <div class="answer-card">
-            <div class="answer-label">💬 Answer</div>
-            <div class="answer-text">{response.content}</div>
-        </div>
-        """, unsafe_allow_html=True)
+    # Add bot response
+    st.session_state.chat_history.append({"role": "assistant", "content": answer})
+    st.rerun()
 
-        with st.expander("📎 View source chunks used"):
-            for i, doc in enumerate(retrieved_docs, start=1):
-                page = doc.metadata.get("page", "?")
-                st.markdown(f"**Match {i}** — Page {page + 1 if isinstance(page, int) else page}")
-                st.code(doc.page_content[:400], language=None)
-
-    except Exception as e:
-        st.error(f"❌ Error getting answer: {e}")
+# Clear chat button
+if st.session_state.chat_history:
+    if st.button("🗑️ Clear chat", use_container_width=False):
+        st.session_state.chat_history = []
+        st.rerun()
 
 # ---------------- Footer ----------------
 st.markdown("""
-<div class="builder-badge">
-    <p>✨ Crafted with ❤️ by</p>
-    <p class="builder-name">Totan</p>
-    <p style="font-size:0.75rem; color:#888; margin-top:4px;">
-        LangChain &nbsp;·&nbsp; Groq &nbsp;·&nbsp; FAISS &nbsp;·&nbsp; HuggingFace &nbsp;·&nbsp; Streamlit
-    </p>
+<div class="footer" style="margin-top:2rem;">
+    <div style="font-size:0.8rem; color:#6b7280;">✨ Crafted with ❤️ by</div>
+    <div class="footer-name">Totan</div>
+    <div class="footer-stack">LangChain &nbsp;·&nbsp; Groq &nbsp;·&nbsp; FAISS &nbsp;·&nbsp; HuggingFace &nbsp;·&nbsp; Streamlit</div>
 </div>
 """, unsafe_allow_html=True)
