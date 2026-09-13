@@ -1,0 +1,28 @@
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Secrets - NEVER commit these
+.env
+*.env.local
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Vector store (we'll generate this at runtime)
+faiss_index/
+chroma_db/
+
+# IDE / OS junk
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# Data (optional - remove this line if you want to commit sample PDFs)
+data/*.pdf
