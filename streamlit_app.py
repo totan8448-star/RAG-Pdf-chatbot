@@ -17,12 +17,27 @@ from langchain_community.vectorstores import FAISS
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 
-# Load from .env locally; on Streamlit Cloud use st.secrets
+# ---------------- Load API key ----------------
+# Streamlit Cloud: read from st.secrets
+# Local dev: read from .env file
 load_dotenv()
-try:
-    os.environ["GROQ_API_KEY"] = st.secrets["GROQ_API_KEY"]
-except Exception:
-    pass  # Running locally — key already loaded from .env
+
+def get_groq_api_key() -> str:
+    # Try Streamlit secrets first (production)
+    try:
+        key = st.secrets["GROQ_API_KEY"]
+        if key:
+            return key
+    except Exception:
+        pass
+    # Fall back to environment variable (local .env)
+    key = os.getenv("GROQ_API_KEY", "")
+    if not key:
+        st.error("❌ GROQ_API_KEY not found. Add it to Streamlit secrets or a local .env file.")
+        st.stop()
+    return key
+
+GROQ_API_KEY = get_groq_api_key()
 
 # ---------------- Page config ----------------
 st.set_page_config(page_title="PDF QA Bot", page_icon="📄", layout="centered")
@@ -32,9 +47,8 @@ st.caption("Ask questions about the PDF — powered by LangChain + Groq + FAISS"
 
 # ---------------- Build RAG pipeline (cached per unique PDF) ----------------
 @st.cache_resource(show_spinner="🔧 Building index for this PDF...")
-def build_rag_chain(pdf_bytes: bytes, pdf_name: str):
-    # Streamlit hashes pdf_bytes → same file re-uploaded hits cache instantly.
-    # PyPDFLoader needs a file path, so we write the bytes to a temp file.
+def build_rag_chain(pdf_bytes: bytes, pdf_name: str, api_key: str):
+    # PyPDFLoader needs a file path, so write bytes to a temp file
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
         tmp.write(pdf_bytes)
         tmp_path = tmp.name
@@ -50,8 +64,9 @@ def build_rag_chain(pdf_bytes: bytes, pdf_name: str):
     )
     vectorstore = FAISS.from_documents(chunks, embeddings)
 
-    # 3. LLM + prompt
-    llm = ChatGroq(model="openai/gpt-oss-20b", temperature=0)
+    # 3. LLM — pass api_key explicitly so it works on Streamlit Cloud
+    llm = ChatGroq(model="openai/gpt-oss-20b", temperature=0, api_key=api_key)
+
     prompt_template = ChatPromptTemplate.from_template("""
 You are a helpful assistant that answers questions based on the provided context.
 Answer the question using ONLY the information in the CONTEXT below.
@@ -77,12 +92,13 @@ uploaded_file = st.file_uploader(
 
 if uploaded_file is None:
     st.info("👆 Upload a PDF above to get started.")
-    st.stop()   # halt here until a file is uploaded
+    st.stop()
 
 # Build (or fetch from cache) the pipeline for this specific PDF
 vectorstore, llm, prompt_template, chunk_count = build_rag_chain(
     uploaded_file.getvalue(),
     uploaded_file.name,
+    GROQ_API_KEY,
 )
 
 
@@ -106,11 +122,8 @@ question = st.text_input(
 if question:
     try:
         with st.spinner("🤔 Thinking..."):
-            # Retrieval
             retrieved_docs = vectorstore.similarity_search(question, k=3)
             context = "\n\n".join(doc.page_content for doc in retrieved_docs)
-
-            # Generation
             filled_prompt = prompt_template.format(context=context, question=question)
             response = llm.invoke(filled_prompt)
 
