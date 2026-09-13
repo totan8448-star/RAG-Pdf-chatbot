@@ -19,8 +19,10 @@ from langchain_core.prompts import ChatPromptTemplate
 
 # Load from .env locally; on Streamlit Cloud use st.secrets
 load_dotenv()
-if "GROQ_API_KEY" in st.secrets:
+try:
     os.environ["GROQ_API_KEY"] = st.secrets["GROQ_API_KEY"]
+except Exception:
+    pass  # Running locally — key already loaded from .env
 
 # ---------------- Page config ----------------
 st.set_page_config(page_title="PDF QA Bot", page_icon="📄", layout="centered")
