@@ -438,20 +438,20 @@ else:
     </div>
     """, unsafe_allow_html=True)
 
-# Input + Send button
-col1, col2 = st.columns([5, 1])
-with col1:
-    question = st.text_input(
-        "question",
-        placeholder="Type your question here...",
-        label_visibility="collapsed",
-        key="question_input",
-    )
-with col2:
-    send = st.button("Send ➤", use_container_width=True, type="primary")
+# Input + Send button — use a form so it only fires once on submit
+with st.form(key="chat_form", clear_on_submit=True):
+    col1, col2 = st.columns([5, 1])
+    with col1:
+        question = st.text_input(
+            "question",
+            placeholder="Type your question here...",
+            label_visibility="collapsed",
+        )
+    with col2:
+        send = st.form_submit_button("Send ➤", use_container_width=True, type="primary")
 
-# Handle send
-if (send or question) and question.strip():
+# Handle send — only fires once when form is submitted
+if send and question.strip():
     # Add user message
     st.session_state.chat_history.append({"role": "user", "content": question.strip()})
 
