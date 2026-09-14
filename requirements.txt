@@ -7,3 +7,6 @@ faiss-cpu
 pypdf
 python-dotenv
 streamlit
+docx2txt
+Pillow
+pytesseract

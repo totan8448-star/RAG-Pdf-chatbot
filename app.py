@@ -30,23 +30,31 @@ def get_groq_api_key() -> str:
 
 GROQ_API_KEY = get_groq_api_key()
 
-@st.cache_resource(show_spinner="⚙️ Processing your PDF...")
-def initialize_pipeline(pdf_bytes: bytes, api_key: str):
-    return build_rag_chain(pdf_bytes, api_key)
+@st.cache_resource(show_spinner="⚙️ Processing your file...")
+def initialize_pipeline(file_bytes: bytes, file_name: str, api_key: str):
+    return build_rag_chain(file_bytes, file_name, api_key)
 
 # ---------------- Application Layout ----------------
 ui.render_hero()
 
-uploaded_file = st.file_uploader("📁 Upload your PDF", type="pdf")
+uploaded_file = st.file_uploader(
+    "📁 Upload your file", 
+    type=["pdf", "png", "jpg", "jpeg", "doc", "docx"]
+)
 
 if uploaded_file is None:
-    st.markdown('<div class="empty-chat">⬆️<br>Upload a PDF to start chatting</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="empty-chat">⬆️<br>Upload a PDF, Image, or Word doc to start chatting</div>', 
+        unsafe_allow_html=True
+    )
     ui.render_footer()
     st.stop()
 
 # ---------------- RAG Setup ----------------
 vectorstore, llm, prompt_template, chunk_count, page_count = initialize_pipeline(
-    uploaded_file.getvalue(), GROQ_API_KEY
+    uploaded_file.getvalue(), 
+    uploaded_file.name, 
+    GROQ_API_KEY
 )
 
 ui.render_status_bar(uploaded_file.name, page_count, uploaded_file.size / 1024)
@@ -56,11 +64,14 @@ ui.render_sidebar(uploaded_file.name, page_count, uploaded_file.size / 1024)
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-st.markdown('<div class="chat-container"><div class="chat-header">🤖 Chat with your PDF</div></div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="chat-container"><div class="chat-header">🤖 Chat with your File</div></div>', 
+    unsafe_allow_html=True
+)
 
 # Render history
 if not st.session_state.chat_history:
-    st.markdown('<div class="empty-chat">Ask anything about your PDF!</div>', unsafe_allow_html=True)
+    st.markdown('<div class="empty-chat">Ask anything about your file!</div>', unsafe_allow_html=True)
 else:
     for msg in st.session_state.chat_history:
         ui.render_chat_message(msg["role"], msg["content"])
@@ -69,7 +80,11 @@ else:
 with st.form(key="chat_form", clear_on_submit=True):
     col1, col2 = st.columns([5, 1])
     with col1:
-        question = st.text_input("question", placeholder="Type your question here...", label_visibility="collapsed")
+        question = st.text_input(
+            "question", 
+            placeholder="Type your question here...", 
+            label_visibility="collapsed"
+        )
     with col2:
         send = st.form_submit_button("Send ➤", use_container_width=True, type="primary")
 
