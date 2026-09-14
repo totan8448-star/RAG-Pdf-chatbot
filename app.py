@@ -1,151 +1,91 @@
-"""
-PDF QA Bot — built with LangChain + Groq + HuggingFace + FAISS.
-
-Pipeline: Load PDF → Split into chunks → Embed → Store in FAISS
-          → Retrieve relevant chunks for a question → Ask Groq LLM.
-"""
-
-import numpy as np
+import os
+import streamlit as st
 from dotenv import load_dotenv
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_community.vectorstores import FAISS
-from langchain_groq import ChatGroq
-from langchain_core.prompts import ChatPromptTemplate
 
+# Import our custom modules
+from rag_pipeline import build_rag_chain, generate_answer
+import streamlit_ui as ui
+
+# ---------------- Initialization ----------------
+st.set_page_config(page_title="PDF QA Bot", page_icon="📄", layout="centered")
+ui.load_custom_css()
 load_dotenv()
 
-# ============================================================
-# STEP 1: Load the PDF
-# ============================================================
-loader = PyPDFLoader("data/131310_Totan.pdf")
-documents = loader.load()
+def get_groq_api_key() -> str:
+    # Check .env file / system environment first
+    key = os.getenv("GROQ_API_KEY", "")
+    
+    # If not found, fall back safely to Streamlit secrets
+    if not key:
+        try:
+            key = st.secrets.get("GROQ_API_KEY", "")
+        except Exception:
+            pass
 
-print("\n--- STEP 1: PDF LOADED ---")
-print(f"Number of pages: {len(documents)}")
-print(f"First page metadata: {documents[0].metadata}")
+    if not key:
+        st.error("❌ GROQ_API_KEY not found. Add it to Streamlit secrets or a local .env file.")
+        st.stop()
+        
+    return key
 
+GROQ_API_KEY = get_groq_api_key()
 
-# ============================================================
-# STEP 2: Split into chunks
-# ============================================================
-splitter = RecursiveCharacterTextSplitter(
-    chunk_size=500,
-    chunk_overlap=100,
+@st.cache_resource(show_spinner="⚙️ Processing your PDF...")
+def initialize_pipeline(pdf_bytes: bytes, api_key: str):
+    return build_rag_chain(pdf_bytes, api_key)
+
+# ---------------- Application Layout ----------------
+ui.render_hero()
+
+uploaded_file = st.file_uploader("📁 Upload your PDF", type="pdf")
+
+if uploaded_file is None:
+    st.markdown('<div class="empty-chat">⬆️<br>Upload a PDF to start chatting</div>', unsafe_allow_html=True)
+    ui.render_footer()
+    st.stop()
+
+# ---------------- RAG Setup ----------------
+vectorstore, llm, prompt_template, chunk_count, page_count = initialize_pipeline(
+    uploaded_file.getvalue(), GROQ_API_KEY
 )
-chunks = splitter.split_documents(documents)
 
-print("\n--- STEP 2: CHUNKS CREATED ---")
-print(f"Original pages: {len(documents)}")
-print(f"After splitting: {len(chunks)} chunks")
-print(f"First chunk length: {len(chunks[0].page_content)} chars")
+ui.render_status_bar(uploaded_file.name, page_count, uploaded_file.size / 1024)
+ui.render_sidebar(uploaded_file.name, page_count, uploaded_file.size / 1024)
 
+# ---------------- Chat System ----------------
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
-# ============================================================
-# STEP 3: Create the embeddings model
-# ============================================================
-embeddings = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2"
-)
+st.markdown('<div class="chat-container"><div class="chat-header">🤖 Chat with your PDF</div></div>', unsafe_allow_html=True)
 
-print("\n--- STEP 3: EMBEDDINGS MODEL READY ---")
-print("Model: all-MiniLM-L6-v2 (384-dim vectors)")
+# Render history
+if not st.session_state.chat_history:
+    st.markdown('<div class="empty-chat">Ask anything about your PDF!</div>', unsafe_allow_html=True)
+else:
+    for msg in st.session_state.chat_history:
+        ui.render_chat_message(msg["role"], msg["content"])
 
+# User Input
+with st.form(key="chat_form", clear_on_submit=True):
+    col1, col2 = st.columns([5, 1])
+    with col1:
+        question = st.text_input("question", placeholder="Type your question here...", label_visibility="collapsed")
+    with col2:
+        send = st.form_submit_button("Send ➤", use_container_width=True, type="primary")
 
-# ============================================================
-# STEP 4: Quick similarity demo (learning check)
-# ============================================================
-def cosine_similarity(v1, v2):
-    v1, v2 = np.array(v1), np.array(v2)
-    return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+# Handle Submission
+if send and question.strip():
+    st.session_state.chat_history.append({"role": "user", "content": question.strip()})
+    
+    with st.spinner("🤔 Thinking..."):
+        answer = generate_answer(vectorstore, llm, prompt_template, question.strip())
 
-demo_texts = [
-    "I love programming in Python",
-    "Python is my favorite coding language",
-    "The pizza was delicious",
-]
-demo_vectors = embeddings.embed_documents(demo_texts)
+    st.session_state.chat_history.append({"role": "assistant", "content": answer})
+    st.rerun()
 
-print("\n--- STEP 4: SIMILARITY DEMO ---")
-print(f"'Python programming' vs 'Python favorite lang': {cosine_similarity(demo_vectors[0], demo_vectors[1]):.4f}")
-print(f"'Python programming' vs 'Pizza delicious':      {cosine_similarity(demo_vectors[0], demo_vectors[2]):.4f}")
+if st.session_state.chat_history:
+    if st.button("🗑️ Clear chat"):
+        st.session_state.chat_history = []
+        st.rerun()
 
-
-# ============================================================
-# STEP 5: Build the FAISS vector store from the chunks
-# ============================================================
-vectorstore = FAISS.from_documents(chunks, embeddings)
-
-print("\n--- STEP 5: VECTOR STORE READY ---")
-print(f"Total vectors stored: {vectorstore.index.ntotal}")
-
-
-# ============================================================
-# STEP 6: Initialize the Groq LLM
-# ============================================================
-llm = ChatGroq(model="openai/gpt-oss-20b", temperature=0)
-
-print("\n--- STEP 6: GROQ LLM READY ---")
-greeting = llm.invoke("Say hello in exactly 5 words.")
-print(f"Groq says: {greeting.content}")
-
-
-# ============================================================
-# STEP 7: Build the prompt template (the "rules" for the LLM)
-# ============================================================
-prompt_template = ChatPromptTemplate.from_template("""
-You are a helpful assistant that answers questions based on the provided context.
-Answer the question using ONLY the information in the CONTEXT below.
-If the answer is not in the context, respond with: "I don't know based on the provided context."
-
-CONTEXT:
-{context}
-
-QUESTION: {question}
-
-ANSWER:
-""")
-
-print("\n--- STEP 7: PROMPT TEMPLATE READY ---")
-
-
-# ============================================================
-# STEP 8: The RAG function — retrieve + generate
-# ============================================================
-def ask_pdf(question: str):
-    # 1) Retrieve the top 3 most similar chunks from FAISS
-    retrieved_docs = vectorstore.similarity_search(question, k=3)
-
-    # 2) Join their text into one context string
-    context = "\n\n".join(doc.page_content for doc in retrieved_docs)
-
-    # 3) Fill the prompt template with context + question
-    filled_prompt = prompt_template.format(context=context, question=question)
-
-    # 4) Ask Groq and return the answer + source docs
-    response = llm.invoke(filled_prompt)
-    return response.content, retrieved_docs
-
-
-# ============================================================
-# STEP 9: Test the bot with real questions
-# ============================================================
-print(f"\n{'=' * 60}")
-print("🤖  PDF QA BOT — TEST RUN")
-print(f"{'=' * 60}")
-
-test_questions = [
-    "Who is this letter about?",
-    "What is the GPN number mentioned?",
-    "When was the letter issued?",
-    "What is the weather in Tokyo today?",  # not in PDF → should say "I don't know"
-]
-
-for q in test_questions:
-    answer, sources = ask_pdf(q)
-    pages = [s.metadata.get("page") for s in sources]
-    print(f"\n❓ Q: {q}")
-    print(f"💬 A: {answer}")
-    print(f"📎 Sources (pages): {pages}")
-    print("-" * 60)
+ui.render_footer()
