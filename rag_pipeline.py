@@ -9,7 +9,10 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.documents import Document
 from PIL import Image
 import pytesseract
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+import shutil
+tess_path = shutil.which("tesseract")
+if tess_path:
+    pytesseract.pytesseract.tesseract_cmd = tess_path
 
 def load_document(file_bytes: bytes, file_name: str):
     """Detects file type and returns a list of Documents."""
